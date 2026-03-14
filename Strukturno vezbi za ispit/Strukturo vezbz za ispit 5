@@ -1,0 +1,52 @@
+//
+Од стандарден влез прво се читаат два знака z1 и z2 , а потоа се читаат редови со низи од знаци се’ додека не се прочита знакот # (секој од редовите не е подолг од 80 знаци).
+
+Да се напише програма со која на стандарден излез ќе се испечатат поднизите од секој ред составени од знаците што се наоѓаат меѓу z1 и z2 (без нив). Секоја подниза се печати во нов ред.
+
+Се смета дека секој ред од датотеката точно еднаш ги содржи знаците z1 и z2, знакот z1 секогаш се наоѓа пред знакот z2, а меѓу z1 и z2 секогаш има барем еден знак.
+
+For example:
+Input 
+0 9
+nfjskdz0nvjkfdmnlks9bvfkjmcdz,
+bfhjdskvfdkl0fvkdzddjmje k dmkldz kdfds!%mlacsd9
+0fbnrjkdn9
+fjkd0jdfkfmjndksfjd;sj sad;jm 9nfcjka
+#
+
+Result
+nvjkfdmnlks
+fvkdzddjmje k dmkldz kdfds!%mlacsd
+fbnrjkdn
+jdfkfmjndksfjd;sj sad;jm 
+//
+#include <iostream>
+using namespace std;
+
+
+
+int main () {
+    char z1,z2;
+    cin>>z1>>z2;
+    char input[1000];
+    int prvindex = -1;
+    int vtorindex = -1;
+    while(cin.getline(input,1000)){
+        if(input[0]=='#'){
+            break;
+        }
+        for(int i = 0; input[i]!='\0';++i){
+            if(input[i]==z1){
+                prvindex = i;
+            }if(input[i]==z2){
+                vtorindex = i;
+            }
+        }
+        if(prvindex!=-1 && vtorindex != -1){
+            for(int i = prvindex+1;i<vtorindex;++i){
+                cout<<input[i];
+            }cout<<endl;
+        }
+    }return 0;
+}
+
