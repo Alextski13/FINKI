@@ -1,0 +1,210 @@
+//
+Дефинирајте апстрактна класа Library со следниве спецификации (5 поени):
+
+    Име на библиотеката (низа од максимум 50 знаци/стринг)
+    Град во кој се наоѓа (низа од максимум 50 знаци/стринг)
+    Основна цена на месечна членарина (реален број)
+    Информација дали работи за викенд (Boolean променлива)
+
+Дополнително, класата треба да содржи двe чисто виртуелни функции-членови на класта:
+
+    void printDetail() - функција која ги печати информациите за објектот
+    double calculateMembershipCardCost() - функција која враќа цена на чинење на членарина во библиотеката
+
+Да се дефинираат две класи, AcademicLibrary и NationalLibrary, кои наследуваат од класата Library (5 поени).
+
+За класата AcademicLibrary дополнително се чува информација за отворени можности за истражување (Boolean променлива), 
+како и информација за број на специјализирани колекции од списанија во рамки на библиотеката (целобројна променлива).
+
+Цената на членарина (функција double calculateMembershipCardCost()) за AcademicLibrary се пресметува на следниот начин:
+
+    Ако библиотеката нуди отворени можности за истражување, тогаш цената се зголемува за 24%.
+
+    Дополнително, секоја специјализирани колекции од списанија ја зголемува цената за $6.
+
+Функцијата void printDetail() ги печати карактеристиките за библиотеката во следниот формат:
+
+[Ime na biblioteka] - (Academic) [Grad] [Broj na spec. kolekcii] [Cena na clenarina] (10 поени)
+
+За класата NationalLibrary дополнително се чува информација за тоа дали библиотеката нуди едукативни програми за културното наследство (Boolean променлива), 
+како и информација за бројот на сочувани оригинални ракописи од национално значење (цел број).
+
+Цената на членарина (функција double calculateMembershipCardCost()) за NationalLibrary се пресметува на следниот начин:
+
+    Ако библиотеката нуди едукативни програми, тогаш цената се намалува за 7%.
+
+    Дополнително, секој сочуван оригинален ракопис ја зголемува цената за $15.
+
+Функцијата void printDetail() ги печати карактеристиките за библиотеката во следниот формат:
+
+[Ime na biblioteka] - (National) [Grad] [Broj na rakopisi] [Cena na clenarina] (10 поени)
+
+Да се дефинира следната глобална функција:
+
+int findMostExpensiveNationalLibrary(Library **l, int n) која како аргумент прима низа од покажувачи кон библиотеки и големина на низата, 
+а како резултат го враќа индексот во низата на националната библиотека (NationalLibrary) која има најскапата членарина. 
+Доколку не постои таков објект во низата, функцијата враќа -1. Ако повеќе национални библиотеки имаат иста цена на членарина, 
+се избира таа која работи за викенд (последниот најден). (20 поени)
+//
+#include <iostream>
+#include <cstring>
+
+using namespace std;
+
+class Library {
+protected:
+    string ime;
+    string grad;
+    int cena;
+    bool rabota;
+public:
+    Library(const string &ime, const string &grad, int cena, bool rabota) : ime(ime), grad(grad), cena(cena), rabota(rabota) {}
+
+    virtual ~Library() {}
+    
+    virtual void printDetail() = 0;
+    virtual double calculateMembershipCardCost() = 0;
+    bool worksOnWeekend() const {
+        return rabota;
+    }
+};
+
+class AcademicLibrary : public Library {
+protected:
+    bool otvorenamoznost;
+    int specijalnikoleckcii;
+public:
+    AcademicLibrary(const string &ime, const string &grad, int cena, bool rabota, bool otvorenamoznost,
+                    int specijalnikoleckcii) : Library(ime, grad, cena, rabota), otvorenamoznost(otvorenamoznost), specijalnikoleckcii(specijalnikoleckcii) {}
+
+    double calculateMembershipCardCost() override {
+        double novacena = cena;
+        if (otvorenamoznost) {
+            novacena *= 1.24;
+        }
+        novacena += specijalnikoleckcii * 6;
+        return novacena;
+    }
+
+    void printDetail() override {
+        cout << ime << " - (Academic) " << grad << " " << specijalnikoleckcii << " " << calculateMembershipCardCost() << endl;
+    }
+};
+
+class NationalLibrary : public Library {
+protected:
+    bool edukativniprogrami;
+    int rakopisi;
+public:
+    NationalLibrary(const string &ime, const string &grad, int cena, bool rabota, bool edukativniprogrami, int rakopisi) : Library(ime, grad, cena, rabota), edukativniprogrami(edukativniprogrami), rakopisi(rakopisi) {}
+
+    double calculateMembershipCardCost() override {
+        double novacena2 = cena;
+        if (edukativniprogrami) {
+            novacena2 *= 0.93;
+        }
+        novacena2 += rakopisi * 15;
+        return novacena2;
+    }
+
+    void printDetail() override {
+        cout << ime << " - (National) " << grad << " " << rakopisi << " " << calculateMembershipCardCost() << endl;
+    }
+};
+
+int findMostExpensiveNationalLibrary(Library **l, int n) {
+    int index = -1;
+    double maxFee = -1.0;
+    
+    for (int i = 0; i < n; ++i) {
+        NationalLibrary *nl = dynamic_cast<NationalLibrary*>(l[i]);
+        if (nl) {
+            double fee = nl->calculateMembershipCardCost();
+            bool worksWeekend = nl->worksOnWeekend();
+
+            if (fee > maxFee || (fee == maxFee && worksWeekend)) {
+                maxFee = fee;
+                index = i;
+            }
+        }
+    }
+
+    return index;
+}
+
+
+int main() {
+    int n, testCase, type;
+    cin >> testCase >> n;
+    cin.ignore();
+
+    Library** m = new Library*[n];
+
+    for (int i = 0; i < n; ++i) {
+        string name;
+        string city;
+        float base_price;
+        bool weekend_working;
+
+        cin >> type;
+        cin.ignore();
+        getline(cin, name);
+        getline(cin, city);
+        cin >> base_price;
+        cin.ignore();
+        cin >> weekend_working;
+        cin.ignore();
+
+        if (type == 1) {
+            bool open_cooperation;
+            int specialized_articles;
+
+            cin >> open_cooperation >> specialized_articles;
+            cin.ignore();
+
+            m[i] = new AcademicLibrary(name, city, base_price, weekend_working, open_cooperation, specialized_articles);
+        } else {
+            bool cultural_program;
+            int national_articles;
+
+            cin >> cultural_program >> national_articles;
+            cin.ignore();
+
+            m[i] = new NationalLibrary(name, city, base_price, weekend_working, cultural_program, national_articles);
+        }
+    }
+
+    if(testCase == 1){
+        cout << "Abstract and child classes OK" << endl;
+    }
+    else if(testCase == 2){
+        for(int i = 0; i < n; i++){
+            cout << m[i]->calculateMembershipCardCost() << endl;
+        }
+        cout << "calculateMembershipCardCost method OK" << endl;
+    }
+    else if(testCase == 3){
+        for(int i = 0; i < n; i++){
+            m[i]->printDetail();
+        }
+        cout << "printDetail method OK" << endl;
+    }
+    else if(testCase == 4){
+        int most_expensive_nat_lib_index = findMostExpensiveNationalLibrary(m, n);
+        if(most_expensive_nat_lib_index>=0){
+            m[most_expensive_nat_lib_index]->printDetail();
+        }else{
+            cout << "National Library not found in the array!"<<endl;
+        }
+        cout << "findMostExpensiveNationalLibrary method OK" << endl;
+    }
+
+
+    for (int i = 0; i < n; ++i) {
+        delete m[i];
+    }
+
+    delete[] m;
+
+    return 0;
+}
