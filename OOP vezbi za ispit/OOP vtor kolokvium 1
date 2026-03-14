@@ -1,0 +1,195 @@
+//
+Да се дефинира класа Product во која ќе се чуваат информации за производ во една продавница и тоа име (стринг), категорија (стринг) 
+и цена (цел број) и достапна количина (цел број).
+
+За класата да се дефинираат потребните конструктори, оператор за печатење << и метод int totalPrice() 
+- методот ја враќа вкупната вредност на производот пресметана како производ на цената и достапната количина. (10 п.)
+
+Да се дефинира класа Store во која ќе се чуваат листа на производи (динамички алоцирана низа од објекти од класата Product и 
+цел број кој ја означува големината на листата).
+
+За класата да се имплементираат:
+
+    Потребните конструктори
+    Оператор += за додавање на производ (Product) во продавницата (5 п.)
+    Оператор за печатење << (5 п.)
+    Метод Store fromCategory (string & category) - кој прима како аргумент категорија (стринг),
+а враќа нов објект од класата Store во кој во листата на производи се сместени само производи од категоријата category. (5 п.)
+        Доколку нема ниту еден таков продукт да се фрли исклучок од класата NoProductFoundException. (5 п.) 
+Справувањето со исклучокот треба да испечати порака “No products from category {category} were found in the store”. (5 п.)
+
+Дополнете ја main функцијата со следните барања:
+
+    Од датотеката input.txt прочитајте ги информациите за сите производи:
+        За секој производ во 4 реда се дадени информациите за името, категоријата, цената и количината.
+        По читањето на информациите за секој производ, секој производ се додава во објектот store.
+    Во датотеката output1.txt да се испечатат информациите за продавницата.
+
+    Во датотеката output2.txt да се испечати резултатот од методот fromCategory за категоријата category вчитана во почетниот код. (15 п.)
+//
+#include <iostream>
+#include <cstring>
+#include <fstream>
+
+using namespace std;
+
+class Product {
+protected:
+    string ime;
+    string categorija;
+    int kolicina;
+    int cena;
+public:
+    Product(string name = " ", string cat = " ", int kol = 0, int cel = 0) {
+        this->ime = name;
+        this->categorija = cat;
+        this->kolicina = kol;
+        this->cena = cel;
+    }
+
+    friend ostream& operator<<(ostream& out, const Product& p) {
+        out << p.ime << " (" << p.categorija << ") " << p.kolicina << " x " << p.cena <<" = "<<p.totalPrice()<< endl;
+        return out;
+    }
+
+    int totalPrice() const {
+        return kolicina * cena;
+    }
+
+    string getCategory() const {
+        return categorija;
+    }
+};
+
+class NoProductFoundException {
+    string category;
+public:
+    NoProductFoundException(string cat) {
+        category = cat;
+    }
+
+    void showMessage() {
+        cout << "No products from category " << category << " were found in the store" << endl;
+    }
+};
+
+class Store {
+protected:
+    Product** lista;
+    int golemina;
+public:
+    Store() {
+        lista = nullptr;
+        golemina = 0;
+    }
+
+    ~Store() {
+        for (int i = 0; i < golemina; ++i) {
+            delete lista[i];
+        }
+        delete[] lista;
+    }
+
+    Store& operator+=(const Product& p) {
+        Product** temp = new Product*[golemina + 1];
+        for (int i = 0; i < golemina; ++i) {
+            temp[i] = lista[i];
+        }
+        temp[golemina] = new Product(p);
+        delete[] lista;
+        lista = temp;
+        ++golemina;
+        return *this;
+    }
+
+    friend ostream& operator<<(ostream& out, const Store& s) {
+        for (int i = 0; i < s.golemina; ++i) {
+            out << *s.lista[i];
+        }
+        return out;
+    }
+
+    Store fromCategory(string& category) {
+        Store filtered;
+        for (int i = 0; i < golemina; ++i) {
+            if (lista[i]->getCategory() == category) {
+                filtered += *lista[i];
+            }
+        }
+        if (filtered.golemina == 0) {
+            throw NoProductFoundException(category);
+        }
+        return filtered;
+    }
+};
+
+// Input helpers
+void wtf() {
+    ofstream fout("input.txt");
+    string line;
+    while (getline(std::cin, line)) {
+        if (line == "----") {
+            break;
+        }
+        fout << line << endl;
+    }
+}
+
+void rff(string path) {
+    ifstream fin(path);
+    string line;
+    while (getline(fin, line)) {
+        cout << line << endl;
+    }
+}
+
+// Main function
+int main() {
+    wtf();
+
+    Store s;
+
+    // Read products from input.txt
+    ifstream fin("input.txt");
+    string name, category;
+    int price, quantity;
+
+    while (getline(fin, name)) {
+        getline(fin, category);
+        fin >> price;
+        fin >> quantity;
+        fin.ignore(); // ignore the newline after the integer
+        Product p(name, category, quantity, price);
+        s += p;
+    }
+
+    // Save all products to output1.txt
+    ofstream fout1("output1.txt");
+    fout1 << s;
+    fout1.close();
+
+    // Read category for filtering
+    string categoryToFilter;
+    cin >> categoryToFilter;
+
+    // Try to get filtered store and save to output2.txt
+    try {
+        Store filtered = s.fromCategory(categoryToFilter);
+        ofstream fout2("output2.txt");
+        fout2 << filtered;
+        fout2.close();
+    } catch (NoProductFoundException& e) {
+        e.showMessage();
+        ofstream fout2("output2.txt");
+        fout2 << "";
+        fout2.close();
+    }
+
+    // Display outputs
+    cout << "All products:" << endl;
+    rff("output1.txt");
+    cout << "Products from category " << categoryToFilter << ": " << endl;
+    rff("output2.txt");
+
+    return 0;
+}
